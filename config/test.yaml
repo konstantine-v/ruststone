@@ -1,0 +1,29 @@
+# Test configuration. Upstream is a local fixture server started by the
+# request tests (tests/requests/mod.rs) on this address.
+
+logger:
+  enable: false
+  pretty_backtrace: true
+  level: debug
+  format: compact
+
+server:
+  port: 5150
+  host: http://localhost
+  middlewares:
+    cors:
+      enable: true
+      allow_origins: ["*"]
+      allow_methods: ["GET", "OPTIONS"]
+
+cache:
+  kind: InMem
+  max_capacity: 1000
+
+workers:
+  mode: ForegroundBlocking
+
+settings:
+  lodestone:
+    base_url: http://127.0.0.1:5199/lodestone/
+    timeout_ms: 2000

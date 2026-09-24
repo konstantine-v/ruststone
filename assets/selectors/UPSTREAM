@@ -1,0 +1,6 @@
+Vendored from https://github.com/xivapi/lodestone-css-selectors
+commit a96d68babf741a2f40637e99ae24c9309b15c9ef
+
+Files are byte-for-byte copies. To update: copy the new upstream files over
+these, update the commit above, then run `cargo test` (selectors are
+compiled and checked by the `selectors_load` test and at boot).

@@ -1,0 +1,33 @@
+# Loco configuration: https://loco.rs/docs/reference/configuration/
+# Start with `LOCO_ENV=production` (or `-e production`).
+
+logger:
+  enable: true
+  pretty_backtrace: false
+  level: <%= get_env(name="LOG_LEVEL", default="info") %>
+  format: json
+
+server:
+  port: <%= get_env(name="PORT", default="5150") %>
+  binding: <%= get_env(name="BINDING", default="0.0.0.0") %>
+  host: <%= get_env(name="HOST", default="http://localhost") %>
+  middlewares:
+    cors:
+      enable: true
+      allow_origins: ["*"]
+      allow_methods: ["GET", "OPTIONS"]
+    compression:
+      enable: true
+
+cache:
+  kind: InMem
+  max_capacity: <%= get_env(name="CACHE_MAX_ENTRIES", default="50000") %>
+
+workers:
+  mode: BackgroundAsync
+
+settings:
+  lodestone:
+    region: <%= get_env(name="LODESTONE_REGION", default="na") %>
+    timeout_ms: <%= get_env(name="LODESTONE_TIMEOUT_MS", default="10000") %>
+    max_concurrent: <%= get_env(name="LODESTONE_MAX_CONCURRENT", default="16") %>

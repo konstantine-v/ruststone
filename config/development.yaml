@@ -1,0 +1,51 @@
+# Loco configuration: https://loco.rs/docs/reference/configuration/
+
+logger:
+  enable: true
+  pretty_backtrace: true
+  # trace, debug, info, warn or error
+  level: <%= get_env(name="LOG_LEVEL", default="debug") %>
+  # compact, pretty or json
+  format: compact
+
+server:
+  port: <%= get_env(name="PORT", default="5150") %>
+  binding: <%= get_env(name="BINDING", default="localhost") %>
+  host: http://localhost
+  middlewares:
+    cors:
+      enable: true
+      allow_origins: ["*"]
+      allow_methods: ["GET", "OPTIONS"]
+    compression:
+      enable: true
+
+# In-memory (moka) cache. `max_capacity` is a number of entries.
+cache:
+  kind: InMem
+  max_capacity: 10000
+
+# No background jobs; required by Loco's config schema.
+workers:
+  mode: BackgroundAsync
+
+# Typed app settings (src/settings.rs). Every key is optional; unknown keys
+# fail at boot.
+settings:
+  lodestone:
+    # na, eu, fr, de or jp
+    region: <%= get_env(name="LODESTONE_REGION", default="na") %>
+    timeout_ms: 10000
+    max_concurrent: 16
+  # Seconds; 0 disables caching for that kind.
+  cache_ttl_secs:
+    character: 1800
+    class_jobs: 1800
+    achievements: 3600
+    mounts: 3600
+    minions: 3600
+    free_company: 3600
+    members: 3600
+    linkshell: 3600
+    pvp_team: 3600
+    search: 300

@@ -1,0 +1,57 @@
+[workspace]
+
+[package]
+name = "ruststone"
+version = "0.1.0"
+edition = "2021"
+publish = false
+default-run = "ruststone-cli"
+
+[workspace.dependencies]
+# DB-less Loco: only the CLI and the in-memory (moka) cache are needed.
+loco-rs = { version = "1.1", default-features = false, features = [
+  "cli",
+  "cache_inmem",
+] }
+
+[dependencies]
+loco-rs = { workspace = true }
+async-trait = { version = "0.1" }
+axum = { version = "0.8" }
+chrono = { version = "0.4", default-features = false, features = ["serde", "std"] }
+html-escape = { version = "0.2" }
+regex = { version = "1.11" }
+# TLS via rustls + ring (installed in `Lodestone::new`); `ring` is already
+# needed by rustls-webpki, so this avoids also building aws-lc-rs.
+reqwest = { version = "0.13", default-features = false, features = [
+  "rustls-no-provider",
+  "gzip",
+  "brotli",
+] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+scraper = { version = "0.27" }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["raw_value"] }
+thiserror = { version = "2" }
+tokio = { version = "1.45", default-features = false, features = [
+  "macros",
+  "rt-multi-thread",
+  "sync",
+] }
+tracing = { version = "0.1" }
+url = { version = "2.5", features = ["serde"] }
+
+[[bin]]
+name = "ruststone-cli"
+path = "src/bin/main.rs"
+required-features = []
+
+[dev-dependencies]
+loco-rs = { workspace = true, features = ["testing"] }
+insta = { version = "1.34", features = ["json", "redactions"] }
+serial_test = { version = "3.1.1" }
+tokio = { version = "1.45", features = ["net"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

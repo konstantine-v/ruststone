@@ -1,0 +1,6 @@
+{
+    "NAME": {
+        "selector": ".heading__linkshell__name",
+        "type": "string"
+    }
+}
