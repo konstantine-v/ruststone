@@ -8,6 +8,7 @@ Ruststone is a **DB-less Loco 1.1** app (`loco-rs` with the `cli` and `cache_inm
 src/app.rs                 # Hooks: after_context builds the Lodestone client; routes
 src/settings.rs            # typed `settings:` block (deny_unknown_fields)
 src/controllers/           # thin handlers: extract → lodestone.fetch → respond
+src/mcp.rs                 # POST /mcp: tool table → in-process calls to the /api router
 src/lodestone/
   mod.rs                   # Lodestone client, Page trait, PageKind, Cached<P>
   selector.rs              # Sel (compiled CSS + regex), ListSel, PagedSel
@@ -40,6 +41,7 @@ tests/live/                # #[ignore] drift checks against the real Lodestone
 3. Add a field to `Selectors` and load it with `file!("…")`. A missing key or an invalid selector or regex fails the `vendored_selectors_load` test and boot.
 4. If the page needs its own TTL, add a `PageKind` variant and map it in `CacheTtl::for_kind`.
 5. Add a handler that calls `respond::<P>(…)`, register its `Routes` in `src/app.rs`, and add a request test plus a fixture in `tests/requests/fixtures.rs`.
+6. Add a matching `Tool` entry to `TOOLS` in `src/mcp.rs` so MCP clients can reach it.
 
 Conventions:
 - Output enums use `#[serde(rename_all(serialize = "snake_case", deserialize = "UPPERCASE"))]`, so the same enum can key a selector file (`DARKKNIGHT`) and serialize idiomatically (`dark_knight`).

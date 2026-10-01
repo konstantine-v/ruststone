@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use axum::Router as AxumRouter;
 use loco_rs::{
     app::{AppContext, Hooks},
     bgworker::Queue,
@@ -13,6 +14,7 @@ use loco_rs::{
 use crate::{
     controllers,
     lodestone::{Lodestone, Selectors},
+    mcp,
     settings::Settings,
 };
 
@@ -58,6 +60,11 @@ impl Hooks for App {
             .add_route(controllers::groups::linkshell_routes())
             .add_route(controllers::groups::cwls_routes())
             .add_route(controllers::groups::pvp_team_routes())
+    }
+
+    /// The MCP tools call the router built so far, so this must run last.
+    async fn after_routes(router: AxumRouter, _ctx: &AppContext) -> Result<AxumRouter> {
+        Ok(mcp::mount(router))
     }
 
     async fn connect_workers(_ctx: &AppContext, _queue: &Queue) -> Result<()> {

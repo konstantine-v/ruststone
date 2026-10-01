@@ -159,3 +159,65 @@ async fn search_encodes_query_and_paginates() {
         "/lodestone/character/?q=Y%27shtola+Rhul&worldname=_dc_Aether&page=1"
     );
 }
+
+#[tokio::test]
+#[serial]
+async fn mcp_lists_tools_and_calls_them_through_the_api() {
+    let upstream = Upstream::start().await;
+    request::<App, _, _>(|request, _ctx| async move {
+        let rpc = |body: Value| {
+            let request = &request;
+            async move { request.post("/mcp").json(&body).await }
+        };
+
+        let init = rpc(json!({
+            "jsonrpc": "2.0", "id": 1, "method": "initialize",
+            "params": { "protocolVersion": "2025-06-18" }
+        }))
+        .await;
+        assert_eq!(init.status_code(), 200);
+        assert_eq!(
+            init.json::<Value>()["result"]["protocolVersion"],
+            "2025-06-18"
+        );
+
+        let note = rpc(json!({ "jsonrpc": "2.0", "method": "notifications/initialized" })).await;
+        assert_eq!(note.status_code(), 202);
+
+        let list: Value = rpc(json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/list" }))
+            .await
+            .json();
+        let tools = list["result"]["tools"].as_array().unwrap();
+        assert!(tools.iter().any(|t| t["name"] == "get_character"));
+
+        let call: Value = rpc(json!({
+            "jsonrpc": "2.0", "id": 3, "method": "tools/call",
+            "params": { "name": "get_character", "arguments": { "id": "1" } }
+        }))
+        .await
+        .json();
+        assert_eq!(call["result"]["isError"], false, "{call}");
+        let text = call["result"]["content"][0]["text"].as_str().unwrap();
+        let profile: Value = serde_json::from_str(text).unwrap();
+        assert_eq!(profile["character"]["name"], "Test Character");
+
+        // API validation surfaces as a tool error, not a protocol error.
+        let bad: Value = rpc(json!({
+            "jsonrpc": "2.0", "id": 4, "method": "tools/call",
+            "params": { "name": "get_character", "arguments": { "id": "../x" } }
+        }))
+        .await
+        .json();
+        assert_eq!(bad["result"]["isError"], true);
+
+        let unknown: Value = rpc(json!({
+            "jsonrpc": "2.0", "id": 5, "method": "tools/call",
+            "params": { "name": "nope" }
+        }))
+        .await
+        .json();
+        assert_eq!(unknown["error"]["code"], -32602);
+    })
+    .await;
+    assert_eq!(upstream.count("/lodestone/character/1/"), 1);
+}

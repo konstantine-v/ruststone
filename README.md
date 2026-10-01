@@ -50,6 +50,18 @@ The API uses these status codes:
 
 Error bodies look like `{"error": "not_found", "description": "…"}`.
 
+## MCP
+
+`POST /mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server (stateless streamable HTTP) that exposes the API as read-only tools: `search_characters`, `get_character`, `get_character_class_jobs`, `get_character_achievements`, `get_character_mounts`, `get_character_minions`, `search_free_companies`, `get_free_company`, `get_free_company_members`, `search_linkshells`, `get_linkshell`, `search_cwls`, `get_cwls`, `search_pvp_teams` and `get_pvp_team`. IDs are passed as strings.
+
+Tools call the `/api` router in-process, so validation, caching and error handling match the REST API. Add a route and a tool entry in `src/mcp.rs` together.
+
+```sh
+claude mcp add --transport http ruststone http://localhost:5150/mcp
+```
+
+The endpoint has no auth. Put it behind your own proxy before exposing it publicly.
+
 ## Development
 
 ```sh
