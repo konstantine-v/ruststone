@@ -1,0 +1,9 @@
+target
+.git
+.github
+.cargo
+tests
+Dockerfile
+.dockerignore
+config/local.yaml
+config/*.local.yaml
