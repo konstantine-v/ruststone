@@ -73,6 +73,7 @@ pub trait SearchEntry: Serialize + Sized + Send + 'static {
     fn parse(sels: &Self::Sels, el: ElementRef<'_>) -> Option<Self>;
 }
 
+/// One page of search results. The entry type selects the Lodestone search.
 #[derive(Debug, Serialize)]
 #[serde(transparent)]
 pub struct Search<E>(pub Paged<E>);
@@ -150,7 +151,7 @@ impl SearchEntry for CharacterEntry {
 
     fn parse(s: &Self::Sels, el: ElementRef<'_>) -> Option<Self> {
         Some(Self {
-            id: CharacterId(s.id.capture_num(el, "ID")?),
+            id: CharacterId::new(s.id.capture_num(el, "ID")?),
             name: s.name.text(el)?,
             avatar: s.avatar.url(el),
             world: World::parse(&s.server, el),
@@ -204,7 +205,7 @@ impl SearchEntry for FreeCompanyEntry {
 
     fn parse(s: &Self::Sels, el: ElementRef<'_>) -> Option<Self> {
         Some(Self {
-            id: FreeCompanyId(s.id.capture_num(el, "ID")?),
+            id: FreeCompanyId::new(s.id.capture_num(el, "ID")?),
             name: s.name.text(el)?,
             world: World::parse(&s.server, el),
             crest: s.crest_layers.parse(el),
@@ -247,7 +248,7 @@ impl SearchEntry for LinkshellEntry {
 
     fn parse(s: &Self::Sels, el: ElementRef<'_>) -> Option<Self> {
         Some(Self {
-            id: LinkshellId(s.id.capture_num(el, "ID")?),
+            id: LinkshellId::new(s.id.capture_num(el, "ID")?),
             name: s.name.text(el)?,
             world: World::parse(&s.server, el),
             active_members: s.active_members.num(el),

@@ -50,6 +50,26 @@ The API uses these status codes:
 
 Error bodies look like `{"error": "not_found", "description": "…"}`.
 
+## Examples
+
+```sh
+curl -s 'http://localhost:5150/api/characters?name=Y%27shtola&world=Gilgamesh'
+curl -s 'http://localhost:5150/api/characters/12345678?include=class_jobs,mounts'
+curl -s 'http://localhost:5150/api/free_companies/9232238498621286345?include=members'
+```
+
+A zero ID, a page of `0`, or a world name with characters other than ASCII letters is `400` and does not call the Lodestone. `include` sections that were not requested are omitted. A requested section the Lodestone marks private is `null`. Other upstream failures fail the whole response.
+
+Free company IDs do not fit in a JavaScript number. Pass them as strings to MCP, and parse REST JSON with a bigint-capable decoder if you need the exact ID.
+
+## Pitfalls
+
+- The regional site localizes scraped text (names of ranks, recruitment, focus labels). Those fields stay strings. Jobs, gender, and free company focus are enums because the selector files name them in English.
+- `LODESTONE_REGION` changes both the host and the language of those strings. Cache keys include the region.
+- `POST /mcp` has no auth. Do not expose it publicly without a proxy.
+- A cache hit returns the stored JSON and does not re-check the Lodestone until the TTL for that page kind expires. `cache_ttl_secs` of `0` skips the cache for that kind.
+- Selector drift against the live site is `cargo test -- --ignored`, not the default test run.
+
 ## MCP
 
 `POST /mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server (stateless streamable HTTP) that exposes the API as read-only tools: `search_characters`, `get_character`, `get_character_class_jobs`, `get_character_achievements`, `get_character_mounts`, `get_character_minions`, `search_free_companies`, `get_free_company`, `get_free_company_members`, `search_linkshells`, `get_linkshell`, `search_cwls`, `get_cwls`, `search_pvp_teams` and `get_pvp_team`. IDs are passed as strings.

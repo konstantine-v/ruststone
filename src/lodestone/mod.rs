@@ -74,6 +74,11 @@ impl PageKind {
 }
 
 /// One kind of Lodestone page: where it lives and how to read it.
+///
+/// `Request` is the validated input (an ID, or an ID plus a page). `url`
+/// builds the upstream URL. `parse` reads the HTML with [`Selectors`] and
+/// returns [`ParseError::Missing`] when a field the page cannot exist
+/// without is absent. Optional fields are `None` instead of an error.
 pub trait Page: Serialize + Sized + Send + 'static {
     const KIND: PageKind;
     /// Everything that identifies one page; also serialised into the cache key.
@@ -151,7 +156,7 @@ impl Lodestone {
             http,
             selectors,
             base: settings.lodestone.base_url()?,
-            limiter: Semaphore::new(settings.lodestone.max_concurrent.max(1)),
+            limiter: Semaphore::new(settings.lodestone.max_concurrent.get()),
             settings,
         })))
     }

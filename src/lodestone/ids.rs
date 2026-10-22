@@ -3,8 +3,29 @@
 //! Every value that ends up in a Lodestone URL goes through one of these
 //! types, so malformed input is rejected with a 400 by the extractor, before
 //! any upstream request is made, and cannot inject path segments.
+//!
+//! Numeric IDs are non-zero. Hash IDs (`CwlsId`, `PvpTeamId`) are 40 hex
+//! characters and are lowercased. `SearchName` is 1–64 characters with no
+//! controls. `WorldName` is 2–20 ASCII letters. `PageNo` starts at 1.
+//!
+//! ```
+//! use std::num::NonZeroU64;
+//!
+//! use ruststone::lodestone::ids::{CharacterId, CwlsId, SearchName};
+//!
+//! let id = CharacterId::new(NonZeroU64::new(42).unwrap());
+//! assert_eq!(id.get(), 42);
+//! assert!(serde_json::from_str::<CharacterId>("0").is_err());
+//!
+//! let cwls = CwlsId::try_from("abcdef0123456789abcdef0123456789abcdef01".to_owned()).unwrap();
+//! assert_eq!(cwls.to_string().len(), 40);
+//! assert!(SearchName::try_from(String::new()).is_err());
+//! ```
 
-use std::{fmt, num::NonZeroU16};
+use std::{
+    fmt,
+    num::{NonZeroU16, NonZeroU64},
+};
 
 use serde::{de, Deserialize, Deserializer, Serialize};
 
@@ -13,7 +34,20 @@ macro_rules! numeric_id {
         $(#[$meta])*
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
         #[serde(transparent)]
-        pub struct $name(pub u64);
+        pub struct $name(NonZeroU64);
+
+        impl $name {
+            /// A non-zero Lodestone ID.
+            #[must_use]
+            pub const fn new(id: NonZeroU64) -> Self {
+                Self(id)
+            }
+
+            #[must_use]
+            pub const fn get(self) -> u64 {
+                self.0.get()
+            }
+        }
 
         impl fmt::Display for $name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -24,15 +58,15 @@ macro_rules! numeric_id {
 }
 
 numeric_id!(
-    /// Lodestone character ID.
+    /// Lodestone character ID. Zero is not an ID and does not deserialize.
     CharacterId
 );
 numeric_id!(
-    /// Lodestone free company ID (these exceed `u32`).
+    /// Lodestone free company ID (these exceed `u32`). Zero does not deserialize.
     FreeCompanyId
 );
 numeric_id!(
-    /// Lodestone (world) linkshell ID.
+    /// Lodestone (world) linkshell ID. Zero does not deserialize.
     LinkshellId
 );
 
@@ -80,6 +114,8 @@ hash_id!(
 );
 
 /// 1-based page number for paginated Lodestone lists.
+///
+/// `0` does not deserialize, so a page index in a URL is never zero.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct PageNo(pub NonZeroU16);
@@ -233,6 +269,16 @@ mod tests {
     fn page_zero_is_rejected() {
         assert!(serde_json::from_str::<PageNo>("0").is_err());
         assert_eq!(serde_json::from_str::<PageNo>("3").unwrap().get(), 3);
+    }
+
+    #[test]
+    fn numeric_id_zero_is_rejected() {
+        assert!(serde_json::from_str::<CharacterId>("0").is_err());
+        assert!(serde_json::from_str::<FreeCompanyId>("0").is_err());
+        assert!(serde_json::from_str::<LinkshellId>("-1").is_err());
+        let id: CharacterId = serde_json::from_str("42").unwrap();
+        assert_eq!(id.get(), 42);
+        assert_eq!(id.to_string(), "42");
     }
 
     #[test]

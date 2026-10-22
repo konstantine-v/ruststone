@@ -1,7 +1,10 @@
 //! Typed application settings, read from the `settings:` block of
 //! `config/{env}.yaml`. Unknown keys are rejected so typos fail at boot.
 
-use std::time::Duration;
+use std::{
+    num::{NonZeroU64, NonZeroUsize},
+    time::Duration,
+};
 
 use serde::Deserialize;
 use url::Url;
@@ -38,9 +41,10 @@ pub struct LodestoneSettings {
     pub region: Region,
     /// Overrides `https://{region}.finalfantasyxiv.com/lodestone/` (tests, proxies).
     pub base_url: Option<Url>,
-    pub timeout_ms: u64,
-    /// Upper bound on simultaneous upstream requests.
-    pub max_concurrent: usize,
+    /// Upstream request timeout, in milliseconds. Zero is rejected.
+    pub timeout_ms: NonZeroU64,
+    /// Upper bound on simultaneous upstream requests. Zero is rejected.
+    pub max_concurrent: NonZeroUsize,
     pub user_agent_desktop: String,
     /// Lodestone only renders mount/minion lists for mobile clients.
     pub user_agent_mobile: String,
@@ -52,8 +56,8 @@ impl Default for LodestoneSettings {
         Self {
             region: Region::Na,
             base_url: None,
-            timeout_ms: 10_000,
-            max_concurrent: 16,
+            timeout_ms: NonZeroU64::new(10_000).unwrap(),
+            max_concurrent: NonZeroUsize::new(16).unwrap(),
             user_agent_desktop: "curl/7.73.0".into(),
             user_agent_mobile: "Mozilla/5.0 (iPhone; CPU OS 10_15_5 like Mac OS X) \
                                 AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 \
@@ -90,7 +94,7 @@ impl LodestoneSettings {
 
     #[must_use]
     pub const fn timeout(&self) -> Duration {
-        Duration::from_millis(self.timeout_ms)
+        Duration::from_millis(self.timeout_ms.get())
     }
 }
 
@@ -187,6 +191,14 @@ mod tests {
     fn rejects_unknown_keys() {
         let raw = serde_json::json!({ "lodestone": { "regoin": "eu" } });
         assert!(Settings::from_config(Some(&raw)).is_err());
+    }
+
+    #[test]
+    fn rejects_zero_timeout_and_concurrency() {
+        let timeout = serde_json::json!({ "lodestone": { "timeout_ms": 0 } });
+        assert!(Settings::from_config(Some(&timeout)).is_err());
+        let concurrent = serde_json::json!({ "lodestone": { "max_concurrent": 0 } });
+        assert!(Settings::from_config(Some(&concurrent)).is_err());
     }
 
     #[test]

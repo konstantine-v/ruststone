@@ -161,7 +161,7 @@ impl MemberSels {
             })
         };
         Some(Member {
-            id: CharacterId(self.id.capture_num(el, "ID")?),
+            id: CharacterId::new(self.id.capture_num(el, "ID")?),
             name: self.name.text(el)?,
             avatar: self.avatar.url(el),
             world: World::parse(&self.server, el),

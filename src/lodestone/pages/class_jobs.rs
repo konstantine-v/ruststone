@@ -10,6 +10,10 @@ use crate::lodestone::{
     ids::CharacterId, page_url, selector::Sel, Page, PageKind, ParseError, Selectors,
 };
 
+/// Class and job levels, plus Bozja and Eureka when those sections exist.
+///
+/// `unlock_state` is the localized class or job name, which is how the
+/// Lodestone shows whether the job itself is unlocked.
 #[derive(Debug, Serialize)]
 pub struct ClassJobs {
     pub jobs: Vec<JobProgress>,

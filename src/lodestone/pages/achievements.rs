@@ -13,6 +13,7 @@ use crate::lodestone::{
     Page, PageKind, ParseError, Selectors,
 };
 
+/// One page of achievements, with the character's point total.
 #[derive(Debug, Serialize)]
 pub struct Achievements {
     pub points: Option<u32>,

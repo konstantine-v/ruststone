@@ -54,8 +54,7 @@ async fn fetch<P: Page>(l: &Lodestone, c: &Cache, req: P::Request) -> Value {
 async fn character_pages_parse() {
     let (l, c) = client();
     let found = fetch::<Search<CharacterEntry>>(&l, &c, query("Alpha")).await;
-    let id: u64 = serde_json::from_value(found["items"][0]["id"].clone()).expect("a search result");
-    let id = ruststone::lodestone::ids::CharacterId(id);
+    let id = serde_json::from_value(found["items"][0]["id"].clone()).expect("a search result");
 
     let character = fetch::<Character>(&l, &c, id).await;
     assert!(character["name"].is_string());
@@ -105,8 +104,7 @@ async fn character_pages_parse() {
 async fn free_company_pages_parse() {
     let (l, c) = client();
     let found = fetch::<Search<FreeCompanyEntry>>(&l, &c, query("Moogle")).await;
-    let id: u64 = serde_json::from_value(found["items"][0]["id"].clone()).expect("a search result");
-    let id = ruststone::lodestone::ids::FreeCompanyId(id);
+    let id = serde_json::from_value(found["items"][0]["id"].clone()).expect("a search result");
 
     let fc = fetch::<FreeCompany>(&l, &c, id).await;
     assert!(fc["name"].is_string());

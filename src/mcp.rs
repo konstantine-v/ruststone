@@ -306,11 +306,17 @@ impl Param {
             (Kind::Id, Value::String(s)) if s.bytes().all(|b| b.is_ascii_alphanumeric()) => {
                 Ok(s.clone())
             }
-            (Kind::Id | Kind::Page, Value::Number(n)) if n.is_u64() => Ok(n.to_string()),
+            (Kind::Id, Value::Number(n)) if n.as_u64().is_some_and(|v| v != 0) => Ok(n.to_string()),
+            (Kind::Page, Value::Number(n))
+                if n.as_u64()
+                    .is_some_and(|v| (1..=u64::from(u16::MAX)).contains(&v)) =>
+            {
+                Ok(n.to_string())
+            }
             (Kind::Id, _) => Err(bad("an alphanumeric ID")),
             (Kind::Text, Value::String(s)) => Ok(s.clone()),
             (Kind::Text, _) => Err(bad("a string")),
-            (Kind::Page, _) => Err(bad("a positive integer")),
+            (Kind::Page, _) => Err(bad("an integer from 1 to 65535")),
             (Kind::Include(allowed), Value::Array(items)) => {
                 let mut names = Vec::with_capacity(items.len());
                 for item in items {
@@ -447,4 +453,23 @@ pub fn mount(router: AxumRouter) -> AxumRouter {
         .route("/mcp", post(handle))
         .with_state(router.clone());
     router.merge(mcp)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn page_and_numeric_id_match_the_api_bounds() {
+        let page = page("p");
+        assert!(page.encode(&json!(0)).is_err());
+        assert!(page.encode(&json!(u32::from(u16::MAX) + 1)).is_err());
+        assert_eq!(page.encode(&json!(2)).unwrap(), "2");
+
+        let id = id("i");
+        assert!(id.encode(&json!(0)).is_err());
+        assert_eq!(id.encode(&json!(12)).unwrap(), "12");
+        assert!(id.encode(&json!("../x")).is_err());
+    }
 }

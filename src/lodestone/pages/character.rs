@@ -15,6 +15,7 @@ use crate::lodestone::{
     Page, PageKind, ParseError, Selectors,
 };
 
+/// Profile, attributes, and gear parsed from one character page.
 #[derive(Debug, Serialize)]
 pub struct Character {
     pub id: CharacterId,
@@ -313,7 +314,7 @@ impl Page for Character {
                 .id
                 .capture_num(s, "ID")
                 .map(|fc_id| FreeCompanyRef {
-                    id: FreeCompanyId(fc_id),
+                    id: FreeCompanyId::new(fc_id),
                     name: p.free_company.name.text(s),
                     crest: p.free_company.icon_layers.parse(s),
                 }),

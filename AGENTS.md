@@ -46,6 +46,7 @@ tests/live/                # #[ignore] drift checks against the real Lodestone
 Conventions:
 - Output enums use `#[serde(rename_all(serialize = "snake_case", deserialize = "UPPERCASE"))]`, so the same enum can key a selector file (`DARKKNIGHT`) and serialize idiomatically (`dark_knight`).
 - Output types are `Serialize` only. The cache stores JSON and never reads it back into Rust types.
+- Numeric Lodestone IDs are `NonZeroU64` newtypes. `0` is a 400. `timeout_ms` and `max_concurrent` are non-zero. Display text stays `String`; closed language-independent sets are enums.
 
 ## Commands
 

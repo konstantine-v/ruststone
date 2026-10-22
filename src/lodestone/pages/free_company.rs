@@ -16,6 +16,10 @@ use crate::lodestone::{
     Page, PageKind, ParseError, Selectors,
 };
 
+/// Free company profile parsed from one Lodestone page.
+///
+/// `active_state`, `recruitment`, and focus labels are display strings from
+/// the regional site. [`Focus`], [`Role`], and [`GrandCompany`] are enums.
 #[derive(Debug, Serialize)]
 pub struct FreeCompany {
     pub id: FreeCompanyId,
